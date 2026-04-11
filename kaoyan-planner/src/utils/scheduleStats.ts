@@ -2,40 +2,37 @@ import dayjs from "dayjs"
 import isoWeek from "dayjs/plugin/isoWeek"
 
 import type { DailySchedule } from "../types"
-import { Subject } from "../types"
+
+import { mapSlotSubjectToMainRingId, type MainRingId } from "./subjectTheme"
 
 dayjs.extend(isoWeek)
 
 export const SUBJECT_RING_META = [
   {
-    id: "ds" as const,
-    name: "数据结构",
-    subject: Subject.DataStructure,
-    color: "#4F46E5",
-  },
-  {
-    id: "co" as const,
-    name: "计组",
-    subject: Subject.ComputerOrganization,
+    id: "politics" as const,
+    name: "政治",
     color: "#DC2626",
   },
   {
-    id: "os" as const,
-    name: "操作系统",
-    subject: Subject.OperatingSystem,
-    color: "#16A34A",
+    id: "english" as const,
+    name: "英语二",
+    color: "#8B5CF6",
   },
   {
-    id: "cn" as const,
-    name: "计网",
-    subject: Subject.ComputerNetwork,
+    id: "math" as const,
+    name: "数学二",
     color: "#F59E0B",
+  },
+  {
+    id: "cs408" as const,
+    name: "408专业课",
+    color: "#2563EB",
   },
 ]
 
-export type SubjectRingId = (typeof SUBJECT_RING_META)[number]["id"]
+export type SubjectRingId = MainRingId
 
-/** 历史所有天中，各科达标项打钩占比 */
+/** 历史所有天中，各科达标项打钩占比（仅统计四大科目时段） */
 export function aggregateSubjectProgress(
   schedulesByDate: Record<string, DailySchedule>,
 ): Record<
@@ -43,26 +40,10 @@ export function aggregateSubjectProgress(
   { checked: number; total: number; percent: number }
 > {
   const acc = {
-    ds: { checked: 0, total: 0 },
-    co: { checked: 0, total: 0 },
-    os: { checked: 0, total: 0 },
-    cn: { checked: 0, total: 0 },
-  }
-
-  const mapSubject = (s: string): SubjectRingId | null => {
-    if (s === Subject.DataStructure) {
-      return "ds"
-    }
-    if (s === Subject.ComputerOrganization) {
-      return "co"
-    }
-    if (s === Subject.OperatingSystem) {
-      return "os"
-    }
-    if (s === Subject.ComputerNetwork) {
-      return "cn"
-    }
-    return null
+    politics: { checked: 0, total: 0 },
+    english: { checked: 0, total: 0 },
+    math: { checked: 0, total: 0 },
+    cs408: { checked: 0, total: 0 },
   }
 
   for (const sch of Object.values(schedulesByDate)) {
@@ -70,7 +51,7 @@ export function aggregateSubjectProgress(
       if (slot.isRestPeriod) {
         continue
       }
-      const key = mapSubject(slot.subject)
+      const key = mapSlotSubjectToMainRingId(slot.subject)
       if (!key) {
         continue
       }

@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 
 import type { SlotStatus, TimeSlotTask } from "../types"
+import { subjectAccentBorderColor } from "../utils/subjectTheme"
 
 export type TimeSlotCardProps = {
   slot: TimeSlotTask
@@ -76,6 +77,11 @@ export function TimeSlotCard({
   const progress =
     totalCriteria === 0 ? 0 : Math.round((checkedCount / totalCriteria) * 100)
 
+  const accentColor = useMemo(
+    () => subjectAccentBorderColor(slot.subject),
+    [slot.subject],
+  )
+
   const expiredIncomplete = useMemo(() => {
     if (slot.isRestPeriod || !scheduleDate) {
       return false
@@ -133,8 +139,15 @@ export function TimeSlotCard({
       className={`relative overflow-hidden rounded-xl border shadow-sm transition-colors ${surfaceClass} ${
         isCurrentSlot
           ? "border-l-4 border-l-blue-500 ring-1 ring-blue-200/60 dark:border-l-blue-400 dark:ring-blue-500/25"
-          : "border-l border-l-transparent"
+          : accentColor
+            ? "border-l-[4px]"
+            : "border-l border-l-transparent"
       }`}
+      style={
+        !isCurrentSlot && accentColor
+          ? { borderLeftColor: accentColor }
+          : undefined
+      }
     >
       {isCurrentSlot ? (
         <span

@@ -1,4 +1,5 @@
-import { useCallback, useId, useRef } from "react"
+import { useCallback, useId, useRef, useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 import { useSettingsStore } from "../store/useSettingsStore"
 
@@ -9,7 +10,23 @@ const PERSIST_KEYS = [
   "kaoyan-phase-milestones",
 ] as const
 
-const SUBJECT_408_BARS = [
+/** 初试总分 500 分科分布 */
+const EXAM_SCORE_BARS = [
+  { label: "政治", code: "101", score: 100, pctLabel: "20%", color: "#DC2626" },
+  { label: "英语二", code: "204", score: 100, pctLabel: "20%", color: "#8B5CF6" },
+  { label: "数学二", code: "302", score: 150, pctLabel: "30%", color: "#F59E0B" },
+  {
+    label: "408专业课",
+    code: "22408",
+    score: 150,
+    pctLabel: "30%",
+    color: "#2563EB",
+  },
+] as const
+
+const TOTAL_EXAM = 500
+
+const CS408_INNER_BARS = [
   { label: "数据结构", score: 45, pctLabel: "30%", color: "#4F46E5" },
   { label: "计算机组成原理", score: 45, pctLabel: "30%", color: "#DC2626" },
   { label: "操作系统", score: 35, pctLabel: "23.3%", color: "#16A34A" },
@@ -113,6 +130,7 @@ const cardShell =
   "rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-200/50 dark:border-slate-600/80 dark:bg-[#1E293B] dark:shadow-none"
 
 export default function SettingsPage() {
+  const [cs408Open, setCs408Open] = useState(false)
   const examDate = useSettingsStore((s) => s.examDate)
   const prepStartDate = useSettingsStore((s) => s.prepStartDate)
   const dailyStudyHoursGoal = useSettingsStore((s) => s.dailyStudyHoursGoal)
@@ -252,11 +270,11 @@ export default function SettingsPage() {
             </p>
             <p>
               <span aria-hidden>📝 </span>
-              考试科目：22408 计算机学科专业基础
+              考试科目：101 政治 · 204 英语二 · 302 数学二 · 22408 专业课
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <span aria-hidden>📊 </span>
-              <span>满分 / 目标：</span>
+              <span>408 满分 / 目标：</span>
               <span className="tabular-nums">150 分</span>
               <span>/</span>
               <input
@@ -275,6 +293,9 @@ export default function SettingsPage() {
               />
               <span className="text-slate-500 dark:text-slate-400">分</span>
             </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              初试总分 500 分；此处目标分为 408 单科目标，可在下方查看全科分值。
+            </p>
             <p className="flex flex-wrap items-center gap-1">
               <span aria-hidden>🏫 </span>
               <span>研招网：</span>
@@ -358,22 +379,22 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* 卡片3：408 分值 */}
+        {/* 卡片3：全科分值 + 408 细分 */}
         <section className={`${cardShell} p-4`}>
           <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            408 科目分值分布
+            初试分值分布（500 分）
           </h2>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            总分 150，条宽按分值比例
+            条宽按各科在总分中占比；配色与首页四科进度一致。
           </p>
           <ul className="mt-4 space-y-3">
-            {SUBJECT_408_BARS.map((row) => (
-              <li key={row.label}>
+            {EXAM_SCORE_BARS.map((row) => (
+              <li key={row.code}>
                 <div className="mb-1 flex justify-between gap-2 text-xs">
                   <span className="font-medium text-slate-800 dark:text-slate-100">
                     {row.label}{" "}
                     <span className="text-slate-500 dark:text-slate-400">
-                      ({row.pctLabel})
+                      ({row.code}) {row.pctLabel}
                     </span>
                   </span>
                   <span className="shrink-0 tabular-nums text-slate-600 dark:text-slate-300">
@@ -384,7 +405,7 @@ export default function SettingsPage() {
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
-                      width: `${(row.score / TOTAL_408) * 100}%`,
+                      width: `${(row.score / TOTAL_EXAM) * 100}%`,
                       backgroundColor: row.color,
                     }}
                   />
@@ -392,9 +413,55 @@ export default function SettingsPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-            选择题 80 分（40 题×2 分）+ 综合题 70 分 | 考试时长 180 分钟
-          </p>
+
+          <button
+            type="button"
+            onClick={() => setCs408Open((o) => !o)}
+            className="mt-4 flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-medium text-slate-800 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-100"
+          >
+            <span>408 专业课内部子分值（150 分）</span>
+            {cs408Open ? (
+              <ChevronUp className="size-4 shrink-0 opacity-70" aria-hidden />
+            ) : (
+              <ChevronDown className="size-4 shrink-0 opacity-70" aria-hidden />
+            )}
+          </button>
+          <div
+            className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+            style={{ gridTemplateRows: cs408Open ? "1fr" : "0fr" }}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <ul className="mt-3 space-y-3 border-t border-slate-100 pt-3 dark:border-slate-600/80">
+                {CS408_INNER_BARS.map((row) => (
+                  <li key={row.label}>
+                    <div className="mb-1 flex justify-between gap-2 text-xs">
+                      <span className="font-medium text-slate-800 dark:text-slate-100">
+                        {row.label}{" "}
+                        <span className="text-slate-500 dark:text-slate-400">
+                          ({row.pctLabel})
+                        </span>
+                      </span>
+                      <span className="shrink-0 tabular-nums text-slate-600 dark:text-slate-300">
+                        {row.score} 分
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700/80">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${(row.score / TOTAL_408) * 100}%`,
+                          backgroundColor: row.color,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                408：选择题 80 分（40 题×2 分）+ 综合题 70 分 | 时长 180 分钟
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* 卡片4：提醒 */}
@@ -484,10 +551,10 @@ export default function SettingsPage() {
             关于
           </h2>
           <p className="text-base font-semibold text-slate-900 dark:text-slate-100">
-            考研408计划表 <span className="text-slate-500">v1.0</span>
+            考研计划表 <span className="text-slate-500">v1.0</span>
           </p>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            专为 22408 考研备考设计的学习管理工具
+            面向政/英/数/408 的考研初试备考管理与打卡工具
           </p>
           <a
             href="#"

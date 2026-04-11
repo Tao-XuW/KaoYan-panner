@@ -5,6 +5,7 @@ import {
   getDailyTemplateForPhase,
   getTemplateByDate,
 } from "../data/scheduleTemplates"
+import { useSettingsStore } from "./useSettingsStore"
 import type { DailySchedule, SlotStatus, TimeSlotTask } from "../types"
 import type { Phase } from "../types"
 
@@ -173,7 +174,7 @@ export const useScheduleStore = create<ScheduleStore>()(
         const key = normalizeDateKey(date)
         const existing = get().schedulesByDate[key]
         if (!existing) {
-          const phase = getTemplateByDate(key)
+          const phase = phaseForDateKey(key)
           const created = buildInitialDailySchedule(key, phase)
           set((s) => ({
             schedulesByDate: { ...s.schedulesByDate, [key]: created },
@@ -199,7 +200,7 @@ export const useScheduleStore = create<ScheduleStore>()(
         set((state) => {
           let schedule = state.schedulesByDate[key]
           if (!schedule) {
-            const phase = getTemplateByDate(key)
+            const phase = phaseForDateKey(key)
             schedule = buildInitialDailySchedule(key, phase)
           }
 
@@ -229,7 +230,7 @@ export const useScheduleStore = create<ScheduleStore>()(
         set((state) => {
           let schedule = state.schedulesByDate[key]
           if (!schedule) {
-            const phase = getTemplateByDate(key)
+            const phase = phaseForDateKey(key)
             schedule = buildInitialDailySchedule(key, phase)
           }
 
@@ -251,7 +252,7 @@ export const useScheduleStore = create<ScheduleStore>()(
         set((state) => {
           let schedule = state.schedulesByDate[key]
           if (!schedule) {
-            const phase = getTemplateByDate(key)
+            const phase = phaseForDateKey(key)
             schedule = buildInitialDailySchedule(key, phase)
           }
 
@@ -277,4 +278,10 @@ export const useScheduleStore = create<ScheduleStore>()(
 
 function normalizeDateKey(date: string): string {
   return date.trim().slice(0, 10)
+}
+
+function phaseForDateKey(key: string) {
+  const exam =
+    useSettingsStore.getState().examDate?.trim().slice(0, 10) ?? undefined
+  return getTemplateByDate(key, exam)
 }

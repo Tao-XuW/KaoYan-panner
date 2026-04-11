@@ -11,11 +11,13 @@ import {
 } from "lucide-react"
 
 import {
+  CS408_SUB_TAG,
+  MAIN_WEEK_TAG,
   PHASES,
-  REFERENCE_BOOKS,
-  SUBJECT_TAG,
+  REFERENCE_CS408,
+  REFERENCE_MAIN,
+  type MainWeekTagKey,
   type PhaseDef,
-  type SubjectTagKey,
   buildTimelineEvents,
 } from "../data/planOverviewData"
 import { useSettingsStore } from "../store/useSettingsStore"
@@ -35,7 +37,7 @@ const cardCls =
   "rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-200/50 dark:border-slate-600/80 dark:bg-[#1E293B] dark:shadow-none"
 
 function SubjectWeekLine({ row }: { row: PhaseDef["weeks"][number] }) {
-  const keys: SubjectTagKey[] = ["ds", "co", "os", "cn"]
+  const keys: MainWeekTagKey[] = ["math", "cs408", "english", "politics"]
   return (
     <li className="border-b border-slate-100 py-2.5 text-[11px] leading-relaxed last:border-b-0 dark:border-slate-600/80">
       <p className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
@@ -46,7 +48,7 @@ function SubjectWeekLine({ row }: { row: PhaseDef["weeks"][number] }) {
           |
         </span>
         {keys.map((k) => {
-          const t = SUBJECT_TAG[k]
+          const t = MAIN_WEEK_TAG[k]
           return (
             <span
               key={k}
@@ -470,17 +472,38 @@ export default function PlanOverviewPage() {
             <BookOpen className="size-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
             参考书目
           </h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            公共课与 408 总览
+          </p>
           <ul className="mt-3 space-y-2.5">
-            {REFERENCE_BOOKS.map((b) => (
+            {REFERENCE_MAIN.map((b) => (
               <li
                 key={b.key}
                 className="rounded-lg border border-slate-100 bg-slate-50/80 py-2 pl-3 text-sm text-slate-800 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-100"
                 style={{
                   borderLeftWidth: 4,
-                  borderLeftColor: SUBJECT_TAG[b.key].color,
+                  borderLeftColor: MAIN_WEEK_TAG[b.key].color,
                 }}
               >
-                <span aria-hidden>{SUBJECT_TAG[b.key].emoji} </span>
+                <span aria-hidden>{MAIN_WEEK_TAG[b.key].emoji} </span>
+                {b.line}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            408 专业课（细分）
+          </p>
+          <ul className="mt-2 space-y-2">
+            {REFERENCE_CS408.map((b) => (
+              <li
+                key={b.key}
+                className="rounded-lg border border-slate-100 bg-slate-50/80 py-2 pl-3 text-[13px] text-slate-800 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-100"
+                style={{
+                  borderLeftWidth: 4,
+                  borderLeftColor: CS408_SUB_TAG[b.key].color,
+                }}
+              >
+                <span aria-hidden>{CS408_SUB_TAG[b.key].emoji} </span>
                 {b.line}
               </li>
             ))}
