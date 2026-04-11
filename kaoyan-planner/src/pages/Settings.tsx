@@ -3,7 +3,11 @@ import { useCallback, useId, useRef } from "react"
 import { useSettingsStore } from "../store/useSettingsStore"
 
 /** 与 Zustand persist 的 name 一致，导出/导入/清空时用 */
-const PERSIST_KEYS = ["kaoyan-settings", "kaoyan-schedule"] as const
+const PERSIST_KEYS = [
+  "kaoyan-settings",
+  "kaoyan-schedule",
+  "kaoyan-phase-milestones",
+] as const
 
 const SUBJECT_408_BARS = [
   { label: "数据结构", score: 45, pctLabel: "30%", color: "#4F46E5" },
