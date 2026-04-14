@@ -574,6 +574,10 @@ function TimelineSection({
 
 export default function PlanOverviewPage() {
   const examDate = useSettingsStore((s) => s.examDate)
+  const bookChapterProgress = usePhaseMilestonesStore((s) => s.bookChapterProgress)
+  const setBookChapterProgress = usePhaseMilestonesStore(
+    (s) => s.setBookChapterProgress,
+  )
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
@@ -651,15 +655,48 @@ export default function PlanOverviewPage() {
           <ul className="mt-3 space-y-2.5">
             {REFERENCE_MAIN.map((b) => (
               <li
-                key={b.key}
-                className="rounded-lg border border-slate-100 bg-slate-50/80 py-2 pl-3 text-sm text-slate-800 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-100"
+                key={b.id}
+                className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-sm text-slate-800 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-100"
                 style={{
                   borderLeftWidth: 4,
                   borderLeftColor: MAIN_WEEK_TAG[b.key].color,
                 }}
               >
-                <span aria-hidden>{MAIN_WEEK_TAG[b.key].emoji} </span>
-                {b.line}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <span aria-hidden>{MAIN_WEEK_TAG[b.key].emoji} </span>
+                    {b.line}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                      第
+                      {Math.min(
+                        b.totalChapters,
+                        Math.max(0, bookChapterProgress[b.id] ?? 0),
+                      )}
+                      章 / 共{b.totalChapters}章
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      max={b.totalChapters}
+                      value={Math.min(
+                        b.totalChapters,
+                        Math.max(0, bookChapterProgress[b.id] ?? 0),
+                      )}
+                      onChange={(e) =>
+                        setBookChapterProgress(
+                          b.id,
+                          Math.min(
+                            b.totalChapters,
+                            Math.max(0, Number.parseInt(e.target.value, 10) || 0),
+                          ),
+                        )
+                      }
+                      className="mt-1 w-16 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-center text-[11px] tabular-nums text-slate-700 dark:border-slate-500 dark:bg-slate-900 dark:text-slate-200"
+                    />
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -669,15 +706,48 @@ export default function PlanOverviewPage() {
           <ul className="mt-2 space-y-2">
             {REFERENCE_CS408.map((b) => (
               <li
-                key={b.key}
-                className="rounded-lg border border-slate-100 bg-slate-50/80 py-2 pl-3 text-[13px] text-slate-800 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-100"
+                key={b.id}
+                className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-[13px] text-slate-800 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-100"
                 style={{
                   borderLeftWidth: 4,
                   borderLeftColor: CS408_SUB_TAG[b.key].color,
                 }}
               >
-                <span aria-hidden>{CS408_SUB_TAG[b.key].emoji} </span>
-                {b.line}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <span aria-hidden>{CS408_SUB_TAG[b.key].emoji} </span>
+                    {b.line}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                      第
+                      {Math.min(
+                        b.totalChapters,
+                        Math.max(0, bookChapterProgress[b.id] ?? 0),
+                      )}
+                      章 / 共{b.totalChapters}章
+                    </p>
+                    <input
+                      type="number"
+                      min={0}
+                      max={b.totalChapters}
+                      value={Math.min(
+                        b.totalChapters,
+                        Math.max(0, bookChapterProgress[b.id] ?? 0),
+                      )}
+                      onChange={(e) =>
+                        setBookChapterProgress(
+                          b.id,
+                          Math.min(
+                            b.totalChapters,
+                            Math.max(0, Number.parseInt(e.target.value, 10) || 0),
+                          ),
+                        )
+                      }
+                      className="mt-1 w-16 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-center text-[11px] tabular-nums text-slate-700 dark:border-slate-500 dark:bg-slate-900 dark:text-slate-200"
+                    />
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

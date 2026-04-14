@@ -23,6 +23,58 @@ import type { TimeSlotTask } from "../types"
 
 dayjs.locale("zh-cn")
 
+const DAILY_QUOTES = (() => {
+  const starts = [
+    "别和昨天的自己妥协",
+    "把注意力拉回当下",
+    "每一次按计划执行",
+    "把每个清晨都当新起点",
+    "愿意为目标多走一步",
+    "哪怕进步只有一点点",
+    "你今天的选择",
+    "当你专注在手头这道题",
+    "真正可靠的安全感",
+    "别怕慢",
+  ]
+  const middles = [
+    "都在悄悄累积实力",
+    "都会在考场上兑现",
+    "都是对未来最硬的投资",
+    "都会让焦虑变小一点",
+    "都会把方向校准得更准",
+    "都会让你更接近目标分",
+    "都会让你更懂得坚持",
+    "都是在为上岸铺路",
+    "都会让状态越来越稳",
+    "都会成为你翻盘的底气",
+  ]
+  const ends = [
+    "上岸从来不是一夜之间，而是日复一日。",
+    "今天认真一点，明天就轻松一点。",
+    "你走的每一步，都算数。",
+    "自律会迟到，但从不缺席。",
+    "再坚持一下，奇迹就会靠近。",
+    "不求一口吃成胖子，只求每天都不后退。",
+    "把今天过好，就是最强复利。",
+    "把难题啃下来，你就比昨天更强。",
+    "沉住气，分数会回报你的耐心。",
+    "把行动拉满，结果会慢慢发光。",
+  ]
+
+  const out: string[] = []
+  for (const a of starts) {
+    for (const b of middles) {
+      for (const c of ends) {
+        out.push(`${a}，${b}。${c}`)
+        if (out.length === 200) {
+          return out
+        }
+      }
+    }
+  }
+  return out
+})()
+
 function parseDayBoundary(dateStr: string, time: string): number {
   const [h, m] = time.split(":").map((x) => Number.parseInt(x, 10))
   const [y, mo, d] = dateStr.split("-").map((x) => Number.parseInt(x, 10))
@@ -156,6 +208,11 @@ export default function Dashboard() {
     () => computeStudyHoursFromSchedule(schedule),
     [schedule],
   )
+  const todayQuote = useMemo(() => {
+    const seed = Number.parseInt(dayjs().format("YYYYMMDD"), 10)
+    const idx = Number.isNaN(seed) ? 0 : seed % DAILY_QUOTES.length
+    return DAILY_QUOTES[idx] ?? DAILY_QUOTES[0]
+  }, [])
   const historyCells = useMemo(
     () => getRecentHistoryCells(schedulesByDate, 7),
     [schedulesByDate],
@@ -190,6 +247,12 @@ export default function Dashboard() {
         </div>
         <p className="mt-2 text-center text-xs text-white/75">
           考试日期：{examDate}（可在设置中修改）
+        </p>
+      </section>
+
+      <section className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-center dark:border-blue-900/60 dark:bg-blue-950/30">
+        <p className="text-sm font-medium text-blue-800 dark:text-blue-100">
+          {todayQuote}
         </p>
       </section>
 

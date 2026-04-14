@@ -1,10 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom"
-import { BookOpen, CalendarClock, Home, Settings } from "lucide-react"
+import { BarChart3, BookOpen, CalendarClock, CircleAlert, Home, ListChecks, Settings } from "lucide-react"
 
 const tabs = [
   { to: "/", label: "首页", icon: Home, end: true },
+  { to: "/tasks", label: "计时", icon: ListChecks, end: false },
   { to: "/schedule", label: "时间表", icon: CalendarClock, end: false },
   { to: "/plan", label: "计划", icon: BookOpen, end: false },
+  { to: "/stats", label: "统计", icon: BarChart3, end: false },
+  { to: "/mistakes", label: "错题", icon: CircleAlert, end: false },
   { to: "/settings", label: "设置", icon: Settings, end: false },
 ] as const
 

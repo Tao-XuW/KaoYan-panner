@@ -8,6 +8,10 @@ const PERSIST_KEYS = [
   "kaoyan-settings",
   "kaoyan-schedule",
   "kaoyan-phase-milestones",
+  "kaoyan-tasks",
+  "kaoyan-pomodoro",
+  "kaoyan-exam-records",
+  "kaoyan-mistakes",
 ] as const
 
 /** 初试总分 500 分科分布 */

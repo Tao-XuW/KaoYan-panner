@@ -337,29 +337,67 @@ export function phase4EndForExam(examDate: string): string {
 
 /** 考研公共课 + 408 总览 */
 export const REFERENCE_MAIN: {
+  id: string
   key: MainWeekTagKey
   line: string
+  totalChapters: number
 }[] = [
-  { key: "politics", line: "政治：肖秀荣《精讲精练》+《1000题》+ 后期肖八肖四" },
-  { key: "english", line: "英语二：张剑黄皮书真题 + 唐迟阅读 + 王江涛/潘赟作文" },
-  { key: "math", line: "数学二：张宇/武忠祥基础+强化 +《660》《880》真题卷" },
   {
+    id: "book-politics-main",
+    key: "politics",
+    line: "政治：肖秀荣《精讲精练》+《1000题》+ 后期肖八肖四",
+    totalChapters: 12,
+  },
+  {
+    id: "book-english-main",
+    key: "english",
+    line: "英语二：张剑黄皮书真题 + 唐迟阅读 + 王江涛/潘赟作文",
+    totalChapters: 16,
+  },
+  {
+    id: "book-math-main",
+    key: "math",
+    line: "数学二：张宇/武忠祥基础+强化 +《660》《880》真题卷",
+    totalChapters: 18,
+  },
+  {
+    id: "book-408-main",
     key: "cs408",
     line: "408专业课：王道四册（数据结构/计组/操作系统/计网）为主",
+    totalChapters: 31,
   },
 ]
 
 /** 408 细分教材 */
-export const REFERENCE_CS408: { key: CS408SubTagKey; line: string }[] = [
-  { key: "ds", line: `${CS408Sub.DataStructure}：王道 + 严蔚敏《数据结构》` },
+export const REFERENCE_CS408: {
+  id: string
+  key: CS408SubTagKey
+  line: string
+  totalChapters: number
+}[] = [
   {
+    id: "book-408-ds",
+    key: "ds",
+    line: `${CS408Sub.DataStructure}：王道 + 严蔚敏《数据结构》`,
+    totalChapters: 8,
+  },
+  {
+    id: "book-408-co",
     key: "co",
     line: `${CS408Sub.ComputerOrganization}：王道 + 唐朔飞《计算机组成原理》`,
+    totalChapters: 7,
   },
-  { key: "os", line: `${CS408Sub.OperatingSystem}：王道 + 汤小丹《操作系统》` },
   {
+    id: "book-408-os",
+    key: "os",
+    line: `${CS408Sub.OperatingSystem}：王道 + 汤小丹《操作系统》`,
+    totalChapters: 9,
+  },
+  {
+    id: "book-408-cn",
     key: "cn",
     line: `${CS408Sub.ComputerNetwork}：王道 + 谢希仁《计算机网络》`,
+    totalChapters: 7,
   },
 ]
 

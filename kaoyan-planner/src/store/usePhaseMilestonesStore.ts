@@ -22,12 +22,15 @@ interface PhaseMilestonesState {
   weekStatus: Record<string, "todo" | "reviewing" | "done">
   /** chapterKey -> 章节学习状态 */
   chapterStatus: Record<string, "todo" | "reviewing" | "done">
+  /** 书籍章节进度：bookId -> 当前章节 */
+  bookChapterProgress: Record<string, number>
   toggleMilestone: (id: string) => void
   setWeekStatus: (id: string, status: "todo" | "reviewing" | "done") => void
   setChapterStatus: (
     id: string,
     status: "todo" | "reviewing" | "done",
   ) => void
+  setBookChapterProgress: (id: string, chapter: number) => void
 }
 
 export const usePhaseMilestonesStore = create<PhaseMilestonesState>()(
@@ -36,6 +39,7 @@ export const usePhaseMilestonesStore = create<PhaseMilestonesState>()(
       checked: buildInitialChecked(),
       weekStatus: {},
       chapterStatus: {},
+      bookChapterProgress: {},
       toggleMilestone: (id: string) =>
         set((s) => ({
           checked: { ...s.checked, [id]: !(s.checked[id] ?? false) },
@@ -48,6 +52,13 @@ export const usePhaseMilestonesStore = create<PhaseMilestonesState>()(
         set((s) => ({
           chapterStatus: { ...s.chapterStatus, [id]: status },
         })),
+      setBookChapterProgress: (id, chapter) =>
+        set((s) => ({
+          bookChapterProgress: {
+            ...s.bookChapterProgress,
+            [id]: Math.max(0, Math.round(chapter)),
+          },
+        })),
     }),
     {
       name: STORAGE_KEY,
@@ -56,6 +67,7 @@ export const usePhaseMilestonesStore = create<PhaseMilestonesState>()(
         checked: s.checked,
         weekStatus: s.weekStatus,
         chapterStatus: s.chapterStatus,
+        bookChapterProgress: s.bookChapterProgress,
       }),
     },
   ),
