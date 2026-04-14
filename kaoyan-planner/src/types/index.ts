@@ -45,6 +45,15 @@ export type SlotStatus =
   | "failed"
   | "skipped"
 
+export const SLOT_STATUS_LABEL: Record<SlotStatus, string> = {
+  not_started: "未开始",
+  in_progress: "进行中",
+  completed: "已完成",
+  partial: "部分完成",
+  failed: "未完成",
+  skipped: "已跳过",
+}
+
 export interface Criterion {
   id: string
   text: string

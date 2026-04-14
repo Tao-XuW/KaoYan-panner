@@ -8,7 +8,7 @@ import {
   Clock,
 } from "lucide-react"
 
-import type { SlotStatus, TimeSlotTask } from "../types"
+import { SLOT_STATUS_LABEL, type SlotStatus, type TimeSlotTask } from "../types"
 import { subjectAccentBorderColor } from "../utils/subjectTheme"
 
 export type TimeSlotCardProps = {
@@ -186,8 +186,8 @@ export function TimeSlotCard({
               </span>
               <span
                 className="text-base leading-none"
-                title={slot.status}
-                aria-label={`状态：${slot.status}`}
+                title={SLOT_STATUS_LABEL[slot.status]}
+                aria-label={`状态：${SLOT_STATUS_LABEL[slot.status]}`}
               >
                 {statusEmoji(slot.status)}
               </span>
@@ -288,7 +288,7 @@ export function TimeSlotCard({
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {SLOT_STATUS_LABEL[s]}
                   </option>
                 ))}
               </select>

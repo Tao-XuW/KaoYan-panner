@@ -14,8 +14,10 @@ import { useSettingsStore } from "../store/useSettingsStore"
 import {
   SUBJECT_RING_META,
   aggregateSubjectProgress,
+  computeStudyHoursFromSchedule,
   computeCheckInStreak,
   getWeekCalendarCells,
+  getRecentHistoryCells,
 } from "../utils/scheduleStats"
 import type { TimeSlotTask } from "../types"
 
@@ -60,7 +62,7 @@ function SubjectRadialRing({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="h-[100px] w-full max-w-[120px]">
+      <div className="relative h-[100px] w-full max-w-[120px]">
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart
             cx="50%"
@@ -79,12 +81,14 @@ function SubjectRadialRing({
             />
           </RadialBarChart>
         </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="text-sm font-bold tabular-nums text-slate-700 dark:text-slate-100">
+            {v}%
+          </span>
+        </div>
       </div>
       <span className="text-center text-[11px] font-medium text-slate-600 dark:text-slate-300">
         {name}
-      </span>
-      <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">
-        {v}%
       </span>
     </div>
   )
@@ -146,6 +150,17 @@ export default function Dashboard() {
     return Math.max(0, d)
   }, [examDate, tick])
 
+  const weeksLeft = useMemo(() => Math.round(daysLeft / 7), [daysLeft])
+  const monthsLeft = useMemo(() => Math.round(daysLeft / 30), [daysLeft])
+  const todayStudyHours = useMemo(
+    () => computeStudyHoursFromSchedule(schedule),
+    [schedule],
+  )
+  const historyCells = useMemo(
+    () => getRecentHistoryCells(schedulesByDate, 7),
+    [schedulesByDate],
+  )
+
   return (
     <div className="mx-auto w-full max-w-[480px] px-4 pb-24 pt-4">
       {/* 1. 倒计时 */}
@@ -159,6 +174,20 @@ export default function Dashboard() {
           </span>
           <span className="ml-1 text-xl font-semibold">天</span>
         </p>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-white/15 px-2 py-2">
+            <p className="text-[10px] text-white/80">还有</p>
+            <p className="text-sm font-semibold tabular-nums">{daysLeft} 天</p>
+          </div>
+          <div className="rounded-lg bg-white/15 px-2 py-2">
+            <p className="text-[10px] text-white/80">约</p>
+            <p className="text-sm font-semibold tabular-nums">{weeksLeft} 周</p>
+          </div>
+          <div className="rounded-lg bg-white/15 px-2 py-2">
+            <p className="text-[10px] text-white/80">约</p>
+            <p className="text-sm font-semibold tabular-nums">{monthsLeft} 个月</p>
+          </div>
+        </div>
         <p className="mt-2 text-center text-xs text-white/75">
           考试日期：{examDate}（可在设置中修改）
         </p>
@@ -213,6 +242,9 @@ export default function Dashboard() {
           进入时间表
           <ChevronRight className="size-4" aria-hidden />
         </Link>
+        <p className="mt-3 text-center text-sm font-medium text-slate-700 dark:text-slate-200">
+          今日累计学习时长：<span className="tabular-nums text-blue-600 dark:text-blue-400">{todayStudyHours}</span> 小时
+        </p>
       </section>
 
       {/* 3. 四科进度环 */}
@@ -256,18 +288,67 @@ export default function Dashboard() {
                     : "border-transparent bg-slate-50 dark:bg-slate-800/80"
                 }`}
               >
-                {cell.hasRecord ? (
-                  <span className="size-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/40" />
-                ) : (
-                  <span className="size-2.5 rounded-full border border-slate-200 bg-slate-50" />
-                )}
+                <span
+                  className={`size-2.5 rounded-full ${
+                    cell.status === "completed"
+                      ? "bg-emerald-500 shadow-sm shadow-emerald-500/40"
+                      : cell.status === "failed"
+                        ? "bg-rose-500 shadow-sm shadow-rose-500/40"
+                        : "bg-slate-300 dark:bg-slate-500"
+                  }`}
+                />
               </div>
             </div>
           ))}
         </div>
+        <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-emerald-500" />
+            已完成
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-rose-500" />
+            未完成
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-slate-300 dark:bg-slate-500" />
+            休息
+          </span>
+        </div>
         <p className="mt-4 text-center text-sm font-medium text-slate-700 dark:text-slate-200">
           🔥 连续打卡 {streak} 天
         </p>
+      </section>
+
+      {/* 5. 历史回顾入口 */}
+      <section className="mb-6 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-md shadow-slate-200/50 dark:border-slate-600/80 dark:bg-[#1E293B] dark:shadow-none">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            历史回顾
+          </h2>
+          <Link
+            to="/schedule"
+            className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+          >
+            更多历史
+          </Link>
+        </div>
+        <div className="mt-3 space-y-2">
+          {historyCells.map((cell) => (
+            <Link
+              key={cell.dateKey}
+              to={`/schedule?date=${cell.dateKey}`}
+              className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+            >
+              <span className="tabular-nums text-slate-700 dark:text-slate-200">
+                {dayjs(cell.dateKey).format("MM-DD ddd")}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {cell.checkedCriteria}/{cell.totalCriteria} · {Math.round(cell.completionRate)}%
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
   )

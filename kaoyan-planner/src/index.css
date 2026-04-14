@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* 系统暗色：与 Tailwind dark: 联动 */
-@variant dark (&:where(@media (prefers-color-scheme: dark)));
+/* 暗色模式：由 main.tsx 跟随系统并切换 html.dark */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   html {
@@ -16,11 +16,9 @@
     color: #0f172a;
   }
 
-  @media (prefers-color-scheme: dark) {
-    body {
-      background-color: #0f172a;
-      color: #f1f5f9;
-    }
+  html.dark body {
+    background-color: #0f172a;
+    color: #f1f5f9;
   }
 
   #root {

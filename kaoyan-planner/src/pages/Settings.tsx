@@ -1,7 +1,7 @@
 import { useCallback, useId, useRef, useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
-import { useSettingsStore } from "../store/useSettingsStore"
+import { type ThemeMode, useSettingsStore } from "../store/useSettingsStore"
 
 /** 与 Zustand persist 的 name 一致，导出/导入/清空时用 */
 const PERSIST_KEYS = [
@@ -34,6 +34,13 @@ const CS408_INNER_BARS = [
 ] as const
 
 const TOTAL_408 = 150
+
+const SUBJECT_TARGET_CONFIG = [
+  { key: "politics", label: "政治", full: 100, nationalRef: "47+" },
+  { key: "english", label: "英语二", full: 100, nationalRef: "47+" },
+  { key: "math", label: "数学二", full: 150, nationalRef: "70+" },
+  { key: "cs408", label: "408专业课", full: 150, nationalRef: "70+" },
+] as const
 
 function NjuptShieldEmblem() {
   return (
@@ -129,12 +136,22 @@ function ToggleRow({
 const cardShell =
   "rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-200/50 dark:border-slate-600/80 dark:bg-[#1E293B] dark:shadow-none"
 
+const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+  { value: "system", label: "跟随系统" },
+  { value: "light", label: "浅色" },
+  { value: "dark", label: "深色" },
+]
+
 export default function SettingsPage() {
   const [cs408Open, setCs408Open] = useState(false)
   const examDate = useSettingsStore((s) => s.examDate)
   const prepStartDate = useSettingsStore((s) => s.prepStartDate)
   const dailyStudyHoursGoal = useSettingsStore((s) => s.dailyStudyHoursGoal)
+  const targetScorePolitics = useSettingsStore((s) => s.targetScorePolitics)
+  const targetScoreEnglish = useSettingsStore((s) => s.targetScoreEnglish)
+  const targetScoreMath = useSettingsStore((s) => s.targetScoreMath)
   const targetScore408 = useSettingsStore((s) => s.targetScore408)
+  const themeMode = useSettingsStore((s) => s.themeMode)
   const reminderDailyEnabled = useSettingsStore((s) => s.reminderDailyEnabled)
   const reminderTime = useSettingsStore((s) => s.reminderTime)
   const slotEndReminderEnabled = useSettingsStore(
@@ -149,7 +166,11 @@ export default function SettingsPage() {
   const setDailyStudyHoursGoal = useSettingsStore(
     (s) => s.setDailyStudyHoursGoal,
   )
+  const setTargetScorePolitics = useSettingsStore((s) => s.setTargetScorePolitics)
+  const setTargetScoreEnglish = useSettingsStore((s) => s.setTargetScoreEnglish)
+  const setTargetScoreMath = useSettingsStore((s) => s.setTargetScoreMath)
   const setTargetScore408 = useSettingsStore((s) => s.setTargetScore408)
+  const setThemeMode = useSettingsStore((s) => s.setThemeMode)
   const setReminderDailyEnabled = useSettingsStore(
     (s) => s.setReminderDailyEnabled,
   )
@@ -272,29 +293,58 @@ export default function SettingsPage() {
               <span aria-hidden>📝 </span>
               考试科目：101 政治 · 204 英语二 · 302 数学二 · 22408 专业课
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <span aria-hidden>📊 </span>
-              <span>408 满分 / 目标：</span>
-              <span className="tabular-nums">150 分</span>
-              <span>/</span>
-              <input
-                type="number"
-                min={0}
-                max={150}
-                value={targetScore408}
-                onChange={(e) => {
-                  const n = Number.parseInt(e.target.value, 10)
-                  if (Number.isNaN(n)) {
-                    return
-                  }
-                  setTargetScore408(n)
-                }}
-                className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1 text-center text-sm tabular-nums text-slate-900 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              />
-              <span className="text-slate-500 dark:text-slate-400">分</span>
+            <div>
+              <p className="mb-2 flex items-center gap-1 text-sm">
+                <span aria-hidden>📊 </span>
+                各科目标分（含国家线参考）
+              </p>
+              <div className="space-y-2">
+                {SUBJECT_TARGET_CONFIG.map((item) => {
+                  const value =
+                    item.key === "politics"
+                      ? targetScorePolitics
+                      : item.key === "english"
+                        ? targetScoreEnglish
+                        : item.key === "math"
+                          ? targetScoreMath
+                          : targetScore408
+                  const onSet =
+                    item.key === "politics"
+                      ? setTargetScorePolitics
+                      : item.key === "english"
+                        ? setTargetScoreEnglish
+                        : item.key === "math"
+                          ? setTargetScoreMath
+                          : setTargetScore408
+                  return (
+                    <div key={item.key} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-600 dark:text-slate-300">
+                        {item.label}（满分 {item.full}，国家线参考 {item.nationalRef}）
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          max={item.full}
+                          value={value}
+                          onChange={(e) => {
+                            const n = Number.parseInt(e.target.value, 10)
+                            if (Number.isNaN(n)) {
+                              return
+                            }
+                            onSet(n)
+                          }}
+                          className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1 text-center text-sm tabular-nums text-slate-900 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        />
+                        <span className="text-xs text-slate-500 dark:text-slate-400">分</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              初试总分 500 分；此处目标分为 408 单科目标，可在下方查看全科分值。
+              注：国家线参考值按近年工学/专硕常见区间，仅作提醒，请以当年官方线为准。
             </p>
             <p className="flex flex-wrap items-center gap-1">
               <span aria-hidden>🏫 </span>
@@ -374,6 +424,27 @@ export default function SettingsPage() {
               <div className="mt-1 flex justify-between text-[10px] text-slate-400">
                 <span>2h</span>
                 <span>10h</span>
+              </div>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                主题模式
+              </span>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {THEME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setThemeMode(opt.value)}
+                    className={`rounded-lg border px-2 py-2 text-xs font-medium transition ${
+                      themeMode === opt.value
+                        ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/50 dark:text-blue-200"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/60"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -556,15 +627,19 @@ export default function SettingsPage() {
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             面向政/英/数/408 的考研初试备考管理与打卡工具
           </p>
-          <a
-            href="#"
-            className="mt-4 inline-flex text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-          >
-            给个 ⭐ Star
-          </a>
           <p className="mt-6 text-center text-xs text-[#1B3A8C] dark:text-blue-300">
             祝你考研顺利，南邮见！🎓
           </p>
+          <div className="mt-3 flex justify-end border-t border-slate-100 pt-3 dark:border-slate-700/70">
+            <a
+              href="https://github.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-500 transition hover:border-blue-300 hover:text-blue-600 dark:border-slate-600 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-300"
+            >
+              ⭐ Star 项目
+            </a>
+          </div>
         </section>
       </div>
     </div>

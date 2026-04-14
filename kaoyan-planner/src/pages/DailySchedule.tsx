@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dayjs from "dayjs"
 import "dayjs/locale/zh-cn"
+import { useSearchParams } from "react-router-dom"
 
 dayjs.locale("zh-cn")
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
@@ -10,6 +11,7 @@ import { TimeSlotCard } from "../components/TimeSlotCard"
 import { Phase } from "../types"
 import type { SlotStatus, TimeSlotTask } from "../types"
 import { useScheduleStore } from "../store/useScheduleStore"
+import { computeStudyHoursFromSchedule } from "../utils/scheduleStats"
 
 const PHASE_LABEL: Record<Phase, string> = {
   [Phase.Foundation]: "阶段一：强化基础",
@@ -99,9 +101,9 @@ function bottomEncourageMessage(rate: number): string {
 }
 
 export default function DailySchedulePage() {
-  const [selectedDate, setSelectedDate] = useState(() =>
-    dayjs().format("YYYY-MM-DD"),
-  )
+  const [searchParams] = useSearchParams()
+  const initDate = searchParams.get("date") ?? dayjs().format("YYYY-MM-DD")
+  const [selectedDate, setSelectedDate] = useState(() => initDate)
   const [timeTick, setTimeTick] = useState(0)
   const [celebrateOpen, setCelebrateOpen] = useState(false)
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -169,6 +171,10 @@ export default function DailySchedulePage() {
   const checked = schedule?.checkedCriteria ?? 0
   const total = schedule?.totalCriteria ?? 0
   const phase = schedule?.phase
+  const studyHours = useMemo(
+    () => computeStudyHoursFromSchedule(schedule),
+    [schedule],
+  )
 
   const setSlotRef = useCallback((id: string, el: HTMLElement | null) => {
     if (el) {
@@ -278,6 +284,9 @@ export default function DailySchedulePage() {
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 已完成 / 总计达标要求
+              </p>
+              <p className="mt-1 text-sm font-medium text-blue-600 dark:text-blue-400">
+                累计学习 {studyHours} 小时
               </p>
             </div>
           </div>

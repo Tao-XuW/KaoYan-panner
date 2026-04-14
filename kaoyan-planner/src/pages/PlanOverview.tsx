@@ -3,7 +3,6 @@ import dayjs from "dayjs"
 import {
   BookOpen,
   Calendar,
-  CheckCircle,
   ChevronDown,
   ChevronUp,
   Circle,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react"
 
 import {
+  CS408_CHAPTERS,
   CS408_SUB_TAG,
   MAIN_WEEK_TAG,
   PHASES,
@@ -36,7 +36,18 @@ import {
 const cardCls =
   "rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-200/50 dark:border-slate-600/80 dark:bg-[#1E293B] dark:shadow-none"
 
-function SubjectWeekLine({ row }: { row: PhaseDef["weeks"][number] }) {
+function SubjectWeekLine({
+  row,
+  phaseIndex,
+}: {
+  row: PhaseDef["weeks"][number]
+  phaseIndex: number
+}) {
+  const weekStatus = usePhaseMilestonesStore((s) => s.weekStatus)
+  const setWeekStatus = usePhaseMilestonesStore((s) => s.setWeekStatus)
+  const statusId = `phase-${phaseIndex}-week-${row.week}`
+  const status = weekStatus[statusId] ?? "todo"
+  const progress = status === "done" ? 100 : status === "reviewing" ? 60 : 0
   const keys: MainWeekTagKey[] = ["math", "cs408", "english", "politics"]
   return (
     <li className="border-b border-slate-100 py-2.5 text-[11px] leading-relaxed last:border-b-0 dark:border-slate-600/80">
@@ -63,6 +74,31 @@ function SubjectWeekLine({ row }: { row: PhaseDef["weeks"][number] }) {
           )
         })}
       </p>
+      <div className="mt-2 flex items-center gap-2">
+        <select
+          value={status}
+          onChange={(e) =>
+            setWeekStatus(
+              statusId,
+              e.target.value as "todo" | "reviewing" | "done",
+            )
+          }
+          className="w-24 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] text-slate-700 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-200"
+        >
+          <option value="todo">待学</option>
+          <option value="reviewing">复习中</option>
+          <option value="done">已学完</option>
+        </select>
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+          <div
+            className="h-full rounded-full bg-blue-500 transition-[width] duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <span className="w-10 text-right tabular-nums text-slate-500 dark:text-slate-400">
+          {progress}%
+        </span>
+      </div>
     </li>
   )
 }
@@ -99,15 +135,11 @@ function PhaseStepper({
                 >
                   <div className="relative flex h-9 w-9 items-center justify-center">
                     {dotDone ? (
-                      <CheckCircle
-                        className="size-9 text-emerald-500"
-                        strokeWidth={2}
-                        aria-hidden
-                      />
+                      <span className="inline-flex size-8 rounded-full bg-blue-600 shadow-md shadow-blue-600/35" />
                     ) : dotCurrent ? (
                       <span className="relative flex size-9 items-center justify-center">
                         <span className="absolute inset-0 animate-ping rounded-full bg-blue-400/40" />
-                        <span className="relative size-8 rounded-full bg-blue-600 shadow-md shadow-blue-600/40" />
+                        <span className="relative size-8 rounded-full bg-blue-500 shadow-[0_0_0_5px_rgba(59,130,246,0.25)]" />
                       </span>
                     ) : (
                       <Circle
@@ -248,6 +280,51 @@ function PhaseDetailCard({
 }) {
   const checked = usePhaseMilestonesStore((s) => s.checked)
   const toggleMilestone = usePhaseMilestonesStore((s) => s.toggleMilestone)
+  const chapterStatus = usePhaseMilestonesStore((s) => s.chapterStatus)
+  const setChapterStatus = usePhaseMilestonesStore((s) => s.setChapterStatus)
+  const [chaptersOpen, setChaptersOpen] = useState(false)
+
+  const chapterProgressBySubject = useMemo(() => {
+    const toPercent = (vals: ("todo" | "reviewing" | "done")[]) => {
+      if (!vals.length) {
+        return 0
+      }
+      const sum = vals.reduce((acc, v) => {
+        if (v === "done") {
+          return acc + 1
+        }
+        if (v === "reviewing") {
+          return acc + 0.6
+        }
+        return acc
+      }, 0)
+      return Math.round((sum / vals.length) * 100)
+    }
+
+    const ds = CS408_CHAPTERS.ds.map(
+      (_, idx) =>
+        chapterStatus[`phase-${phase.index}-cs408-ds-${idx}`] ?? "todo",
+    )
+    const co = CS408_CHAPTERS.co.map(
+      (_, idx) =>
+        chapterStatus[`phase-${phase.index}-cs408-co-${idx}`] ?? "todo",
+    )
+    const os = CS408_CHAPTERS.os.map(
+      (_, idx) =>
+        chapterStatus[`phase-${phase.index}-cs408-os-${idx}`] ?? "todo",
+    )
+    const cn = CS408_CHAPTERS.cn.map(
+      (_, idx) =>
+        chapterStatus[`phase-${phase.index}-cs408-cn-${idx}`] ?? "todo",
+    )
+
+    return {
+      ds: toPercent(ds),
+      co: toPercent(co),
+      os: toPercent(os),
+      cn: toPercent(cn),
+    }
+  }, [chapterStatus, phase.index])
 
   return (
     <section
@@ -291,9 +368,105 @@ function PhaseDetailCard({
             </h4>
             <ul className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 dark:border-slate-600/60 dark:bg-slate-800/40">
               {phase.weeks.map((row) => (
-                <SubjectWeekLine key={row.week} row={row} />
+                <SubjectWeekLine
+                  key={row.week}
+                  row={row}
+                  phaseIndex={phase.index}
+                />
               ))}
             </ul>
+
+            <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-600/60 dark:bg-slate-800/40">
+              <button
+                type="button"
+                onClick={() => setChaptersOpen((v) => !v)}
+                className="flex w-full items-center justify-between gap-2 text-left"
+              >
+                <h4 className="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                  408 章节进度追踪
+                </h4>
+                {chaptersOpen ? (
+                  <ChevronUp className="size-4 text-slate-400" />
+                ) : (
+                  <ChevronDown className="size-4 text-slate-400" />
+                )}
+              </button>
+
+              <div
+                className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+                style={{ gridTemplateRows: chaptersOpen ? "1fr" : "0fr" }}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className="mt-3 space-y-3">
+                    {(
+                      [
+                        ["ds", "数据结构"],
+                        ["co", "计组"],
+                        ["os", "操作系统"],
+                        ["cn", "计网"],
+                      ] as const
+                    ).map(([key, label]) => {
+                      const chapters = CS408_CHAPTERS[key]
+                      const subjectProgress = chapterProgressBySubject[key]
+                      return (
+                        <div
+                          key={key}
+                          className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-600 dark:bg-slate-800/60"
+                        >
+                          <div className="mb-2 flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">
+                              {label}
+                            </span>
+                            <span className="tabular-nums text-slate-500 dark:text-slate-400">
+                              {subjectProgress}%
+                            </span>
+                          </div>
+                          <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                            <div
+                              className="h-full rounded-full bg-blue-500"
+                              style={{ width: `${subjectProgress}%` }}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            {chapters.map((chapter, idx) => {
+                              const chapterId = `phase-${phase.index}-cs408-${key}-${idx}`
+                              const status = chapterStatus[chapterId] ?? "todo"
+                              return (
+                                <div
+                                  key={chapterId}
+                                  className="flex items-center justify-between gap-2"
+                                >
+                                  <span className="min-w-0 truncate text-[11px] text-slate-600 dark:text-slate-300">
+                                    {chapter}
+                                  </span>
+                                  <select
+                                    value={status}
+                                    onChange={(e) =>
+                                      setChapterStatus(
+                                        chapterId,
+                                        e.target.value as
+                                          | "todo"
+                                          | "reviewing"
+                                          | "done",
+                                      )
+                                    }
+                                    className="w-20 shrink-0 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[11px] text-slate-700 dark:border-slate-500 dark:bg-slate-900 dark:text-slate-200"
+                                  >
+                                    <option value="todo">待学</option>
+                                    <option value="reviewing">复习中</option>
+                                    <option value="done">已学</option>
+                                  </select>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <h4 className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               本阶段关键目标

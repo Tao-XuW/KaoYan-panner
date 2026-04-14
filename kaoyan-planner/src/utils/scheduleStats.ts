@@ -110,6 +110,7 @@ export type WeekDayCell = {
   label: string
   isToday: boolean
   hasRecord: boolean
+  status: "completed" | "failed" | "rest"
 }
 
 /** 本周（周一至周日）每日是否有打卡记录 */
@@ -129,7 +130,100 @@ export function getWeekCalendarCells(
       label: WEEKDAY_LABELS[i] ?? d.format("M/D"),
       isToday: d.isSame(now, "day"),
       hasRecord: hasCheckIn(schedulesByDate, dateKey),
+      status: resolveWeekDayStatus(schedulesByDate, dateKey, d, now),
     })
   }
   return cells
+}
+
+function resolveWeekDayStatus(
+  schedulesByDate: Record<string, DailySchedule>,
+  dateKey: string,
+  day: dayjs.Dayjs,
+  now: dayjs.Dayjs,
+): "completed" | "failed" | "rest" {
+  if (day.isAfter(now, "day")) {
+    return "rest"
+  }
+  const sch = schedulesByDate[dateKey]
+  if (!sch || sch.totalCriteria <= 0) {
+    return "rest"
+  }
+  if (sch.checkedCriteria >= sch.totalCriteria) {
+    return "completed"
+  }
+  return "failed"
+}
+
+function parseMinuteOfDay(time: string): number {
+  const [h, m] = time.split(":").map((x) => Number.parseInt(x, 10))
+  if (Number.isNaN(h) || Number.isNaN(m)) {
+    return 0
+  }
+  return h * 60 + m
+}
+
+function statusWeight(status: string): number {
+  if (status === "completed") {
+    return 1
+  }
+  if (status === "partial") {
+    return 0.6
+  }
+  if (status === "in_progress") {
+    return 0.35
+  }
+  return 0
+}
+
+/** 按时段完成度估算某日实际学习时长（小时） */
+export function computeStudyHoursFromSchedule(
+  schedule?: DailySchedule,
+): number {
+  if (!schedule) {
+    return 0
+  }
+  let minutes = 0
+  for (const slot of schedule.slots) {
+    if (slot.isRestPeriod) {
+      continue
+    }
+    const span = Math.max(0, parseMinuteOfDay(slot.endTime) - parseMinuteOfDay(slot.startTime))
+    if (span <= 0) {
+      continue
+    }
+    const total = slot.criteria.length
+    const checked = slot.criteria.filter((c) => c.checked).length
+    const ratio = total > 0 ? checked / total : statusWeight(slot.status)
+    minutes += span * Math.min(1, Math.max(0, ratio))
+  }
+  return Math.round((minutes / 60) * 10) / 10
+}
+
+export type HistoryDayCell = {
+  dateKey: string
+  completionRate: number
+  checkedCriteria: number
+  totalCriteria: number
+}
+
+/** 最近 N 天（含今天）的历史完成数据，按日期倒序 */
+export function getRecentHistoryCells(
+  schedulesByDate: Record<string, DailySchedule>,
+  days = 7,
+  now: dayjs.Dayjs = dayjs(),
+): HistoryDayCell[] {
+  const out: HistoryDayCell[] = []
+  for (let i = 0; i < days; i++) {
+    const d = now.subtract(i, "day")
+    const dateKey = d.format("YYYY-MM-DD")
+    const sch = schedulesByDate[dateKey]
+    out.push({
+      dateKey,
+      completionRate: sch?.completionRate ?? 0,
+      checkedCriteria: sch?.checkedCriteria ?? 0,
+      totalCriteria: sch?.totalCriteria ?? 0,
+    })
+  }
+  return out
 }
