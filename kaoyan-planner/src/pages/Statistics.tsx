@@ -128,7 +128,14 @@ export default function StatisticsPage() {
   const scoreTrend = useMemo(() => {
     const byYear = new Map<
       number,
-      { year: string; 政治: number; 英语二: number; 数学二: number; 专业课408: number; 总分: number }
+      {
+        year: string
+        政治: number | null
+        英语二: number | null
+        数学二: number | null
+        专业课408: number | null
+        总分: number
+      }
     >()
     for (const r of records) {
       byYear.set(r.year, {
